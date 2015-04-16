@@ -1,22 +1,24 @@
 #include "IntensityImageStudent.h"
+#include<iostream>
 
 IntensityImageStudent::IntensityImageStudent() : IntensityImage() {
-	int throwError = 0, e = 1 / throwError; //Throws error without the need to include a header
-	//TODO: Nothing
 }
 
 IntensityImageStudent::IntensityImageStudent(const IntensityImageStudent &other) : IntensityImage(other.getWidth(), other.getHeight()) {
-	int throwError = 0, e = 1 / throwError;
+	for (int i = 0; i < (other.getWidth()*other.getHeight()); i++){
+		std::cout << "Pixel value: " << other.getPixel(i) << std::endl;
+	}
 	//TODO: Create a copy from the other object
 }
 
-IntensityImageStudent::IntensityImageStudent(const int width, const int height) : IntensityImage(width, height) {
-	int throwError = 0, e = 1 / throwError;
+IntensityImageStudent::IntensityImageStudent(const int width, const int height) : IntensityImage(width, height), intensity(new Intensity[width*height]) {
+	//int throwError = 0, e = 1 / throwError;
 	//TODO: Initialize pixel storage
 }
 
 IntensityImageStudent::~IntensityImageStudent() {
-	int throwError = 0, e = 1 / throwError;
+	delete intensity;
+	//int throwError = 0, e = 1 / throwError;
 	//TODO: delete allocated objects
 }
 
