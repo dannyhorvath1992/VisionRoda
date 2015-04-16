@@ -14,7 +14,9 @@ intensity(new Intensity[other.getWidth()*other.getHeight()])
 	//TODO: Create a copy from the other object
 }
 
-IntensityImageStudent::IntensityImageStudent(const int width, const int height) : IntensityImage(width, height), intensity(new Intensity[width*height]) {
+IntensityImageStudent::IntensityImageStudent(const int width, const int height) : 
+IntensityImage(width, height), 
+intensity(new Intensity[width*height]) {
 	//int throwError = 0, e = 1 / throwError;
 	//TODO: Initialize pixel storage
 }
