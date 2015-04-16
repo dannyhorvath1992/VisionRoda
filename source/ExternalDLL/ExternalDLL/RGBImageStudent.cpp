@@ -4,8 +4,6 @@
 RGBImageStudent::RGBImageStudent() : RGBImage() {
 	//int throwError = 0, e = 1 / throwError; //Throws error without the need to include a header
 	//TODO: Nothing
-	std::cout << "constr rgb";
-
 }
 
 RGBImageStudent::RGBImageStudent(const RGBImageStudent &other) : 
@@ -17,7 +15,7 @@ RGBImageStudent::RGBImageStudent(const RGBImageStudent &other) :
 	std::cout << "constr rgb2";
 
 	for (int i = 0; i < (other.getWidth() * other.getHeight()); i++) {
-		pixs[i] = other.getPixel(i);
+		pixs[i] = other.pixs[i];
 	}
 }
 
@@ -53,14 +51,14 @@ void RGBImageStudent::set(const RGBImageStudent &other) {
 	delete[] pixs;
 	pixs = new RGB[other.getWidth() * other.getHeight()];
 	for (int i = 0; i < other.getWidth() * other.getHeight(); i++) {
-		pixs[i] =  other.getPixel(i);
+		pixs[i] = other.pixs[i];
 	}
 }
 
 void RGBImageStudent::setPixel(int x, int y, RGB pixel) {
 	//int throwError = 0, e = 1 / throwError;
 	//TODO: no comment needed :)
-	pixs[x*y] = pixel;
+	pixs[y * getWidth() + x] = pixel;
 }
 
 void RGBImageStudent::setPixel(int i, RGB pixel) {
@@ -92,7 +90,7 @@ void RGBImageStudent::setPixel(int i, RGB pixel) {
 RGB RGBImageStudent::getPixel(int x, int y) const {
 	//int throwError = 0, e = 1 / throwError;
 	//TODO: no comment needed :)
-	return pixs[x*y];
+	return pixs[y * getWidth() + x];
 }
 
 RGB RGBImageStudent::getPixel(int i) const {
