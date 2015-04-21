@@ -47,7 +47,7 @@ void RGBImageStudent::set(const int width, const int height) {
 void RGBImageStudent::set(const RGBImageStudent &other) {
 	RGBImage::set(other.getWidth(), other.getHeight());
 	//int throwError = 0, e = 1 / throwError;
-	//TODO: resize or create a new pixel storage and copy the object (Don't forget to delete the old storage)
+	//DONE -> TODO: resize or create a new pixel storage and copy the object (Don't forget to delete the old storage)
 	delete[] pixs;
 	pixs = new RGB[other.getWidth() * other.getHeight()];
 	for (int i = 0; i < other.getWidth() * other.getHeight(); i++) {
@@ -64,7 +64,7 @@ void RGBImageStudent::setPixel(int x, int y, RGB pixel) {
 void RGBImageStudent::setPixel(int i, RGB pixel) {
 	//int throwError = 0, e = 1 / throwError;
 	/*
-	* TODO: set pixel i in "Row-Major Order"
+	* Done -> TODO: set pixel i in "Row-Major Order"
 	*
 	*
 	* Original 2d image (values):
