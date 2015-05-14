@@ -9,8 +9,6 @@
 #include <vector>
 class RGBImageStudent : public RGBImage {
 private:
-	std::vector<std::vector<RGB>> pixels;
-	//or
 	RGB *pixs;
 public:
 
