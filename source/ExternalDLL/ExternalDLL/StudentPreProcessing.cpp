@@ -60,9 +60,9 @@ IntensityImage * StudentPreProcessing::stepEdgeDetection(const IntensityImage &i
 	GX[2][0] = -1; GX[2][1] = 0; GX[2][2] = 1;
 
 	//Sobel Vertical Mask   
-	GY[0][0] = 1; GY[0][1] = 2; GY[0][2] = 1;
+	GY[0][0] = -1; GY[0][1] = -2; GY[0][2] = -1;
 	GY[1][0] = 0; GY[1][1] = 0; GY[1][2] = 0;
-	GY[2][0] = -1; GY[2][1] = -2; GY[2][2] = -1;
+	GY[2][0] = 1; GY[2][1] = 2; GY[2][2] = 1;
 
 	int SUM;
 	unsigned int val1, val2, val3;
@@ -90,26 +90,31 @@ IntensityImage * StudentPreProcessing::stepEdgeDetection(const IntensityImage &i
 				{
 					for (int y = -1; y <= 1; y++)
 					{
-						valX = valX + image.getPixel(i - x, j - y) * GX[1 + x][1 + y];
-						valY = valY + image.getPixel(i - x, j - y) * GY[1 + x][1 + y];
+						valX = valX + image.getPixel(j+y, i+x) * GX[1 + x][1 + y];
+						valY = valY + image.getPixel(j+y, i+x) * GY[1 + x][1 + y];
+					
 					}
 				}
 
-				SUM = abs(valX) + abs(valY);
+				//SUM = abs(valX) + abs(valY);
 
 			}
 
+			SUM = abs(valX) + abs(valY);
+			SUM = SUM > 255 ? 255 : SUM;
+			SUM = SUM < 0 ? 0 : SUM;
+
 			//Gradient magnitude
-			val1 = sqrt(valX*valX + valY*valY);
+			//val1 = sqrt(valX*valX + valY*valY);
 
-			if (SUM>255) SUM = 255;
-			if (SUM<0) SUM = 0;
-			unsigned char tst = 255 - (unsigned char)(SUM);
+			//if (SUM>255) SUM = 255;
+			//if (SUM<0) SUM = 0;
+			//unsigned char tst = 255 - (unsigned char)(SUM);
+			if (i > imageWidth) {
+				std::cout << j;
+			}
+			cop->setPixel(j, i, SUM);
 
-			cop->setPixel(i, j, tst);
-
-			//setting the new pixel value
-			//cop->setPixel(i,j,val1);
 		}
 	}
 
@@ -117,11 +122,29 @@ IntensityImage * StudentPreProcessing::stepEdgeDetection(const IntensityImage &i
 
 	return cop;
 
-	//return nullptr;
 }
 
 IntensityImage * StudentPreProcessing::stepThresholding(const IntensityImage &image) const {
-	return nullptr;
+	int imageWidth = image.getWidth();
+	int imageHeight = image.getHeight();
+	IntensityImage * cop = ImageFactory::newIntensityImage();
+	cop->set(imageWidth, imageHeight);
+	int val;
+	int thresh = 159;
+
+	for (int i = 0; i < imageHeight; i++)
+	{
+		for (int j = 0; j < imageWidth; j++)
+		{
+
+			val = image.getPixel(j, i);
+			val = val > thresh ? 0 : 255;
+			cop->setPixel(j, i, val);
+
+		}
+	}
+
+	return cop;
 }
 
 ///// end -> BACKUP BELOW
