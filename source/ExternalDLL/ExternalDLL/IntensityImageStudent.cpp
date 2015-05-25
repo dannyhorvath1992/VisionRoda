@@ -1,5 +1,5 @@
 #include "IntensityImageStudent.h"
-#include<iostream>
+#include <iostream>
 
 IntensityImageStudent::IntensityImageStudent() : IntensityImage() {
 }
