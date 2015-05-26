@@ -33,7 +33,81 @@ IntensityImage * StudentPreProcessing::stepToIntensityImage(const RGBImage &imag
 }
 
 IntensityImage * StudentPreProcessing::stepScaleImage(const IntensityImage &image) const {
-	return nullptr;
+	double imageWidth = image.getWidth();
+	double imageHeight = image.getHeight();
+	double oldDimensions = imageWidth * imageHeight;
+	double maxHeight = 200;
+	double maxWidth = 200;
+	double newHeight;
+	double newWidth;
+	double newDimensions = maxWidth * maxHeight;
+	
+	double ratio;
+	IntensityImage * cop;
+
+	if (newDimensions < oldDimensions) {
+		// resize
+		// Get aspect ratio and new dimensions
+		if (imageWidth > maxWidth) {
+			ratio = maxWidth / imageWidth;
+			newHeight = imageHeight * ratio;
+			newWidth = imageWidth * ratio;
+		}
+		if (imageHeight > maxHeight) {
+			ratio = maxHeight / imageHeight;
+			newWidth = imageWidth * ratio;
+			newHeight = imageHeight * ratio;
+		}
+
+		newDimensions = newWidth * newHeight;
+
+		std::cout << newWidth << " x " << newHeight;
+
+
+		cop = ImageFactory::newIntensityImage();
+		cop->set(newWidth, newHeight);
+
+		// scale
+		int A, B, C, D, x, y, index, gray;
+		float x_ratio = ((float)(imageWidth - 1)) / newWidth;
+		float y_ratio = ((float)(imageHeight - 1)) / newHeight;
+		float x_diff, y_diff, ya, yb;
+		int offset = 0;
+
+		for (int i = 0; i < newHeight; ++i) {
+			for (int j = 0; j < newWidth; ++j) {
+				x = (int)(x_ratio * j);
+				y = (int)(y_ratio * i);
+				x_diff = (x_ratio * j) - x;
+				y_diff = (y_ratio * i) - y;
+				index = y*imageWidth + x;
+
+				// range is 0 to 255 thus bitwise AND with 0xff
+				A = image.getPixel(index) & 0xff;
+				B = image.getPixel(index + 1) & 0xff;
+				C = image.getPixel(index + imageWidth) & 0xff;
+				D = image.getPixel(index + imageWidth + 1) & 0xff;
+
+				// Y = A(1-w)(1-h) + B(w)(1-h) + C(h)(1-w) + Dwh
+				gray = (int)(
+					A*(1 - x_diff)*(1 - y_diff) + B*(x_diff)*(1 - y_diff) +
+					C*(y_diff)*(1 - x_diff) + D*(x_diff*y_diff)
+					);
+
+				cop->setPixel(offset++, gray);
+			}
+		}
+		
+
+	}
+	else {
+		// return original
+		cop = ImageFactory::newIntensityImage(image);
+
+	}
+
+	return cop;
+
 }
 
 IntensityImage * StudentPreProcessing::stepEdgeDetection(const IntensityImage &image) const {
@@ -60,9 +134,9 @@ IntensityImage * StudentPreProcessing::stepEdgeDetection(const IntensityImage &i
 	GX[2][0] = -1; GX[2][1] = 0; GX[2][2] = 1;
 
 	//Sobel Vertical Mask   
-	GY[0][0] = -1; GY[0][1] = -2; GY[0][2] = -1;
+	GY[0][0] = 1; GY[0][1] = 2; GY[0][2] = 1;
 	GY[1][0] = 0; GY[1][1] = 0; GY[1][2] = 0;
-	GY[2][0] = 1; GY[2][1] = 2; GY[2][2] = 1;
+	GY[2][0] = -1; GY[2][1] = -2; GY[2][2] = -1;
 
 	int SUM;
 	unsigned int val1, val2, val3;
@@ -110,9 +184,7 @@ IntensityImage * StudentPreProcessing::stepEdgeDetection(const IntensityImage &i
 			//if (SUM>255) SUM = 255;
 			//if (SUM<0) SUM = 0;
 			//unsigned char tst = 255 - (unsigned char)(SUM);
-			if (i > imageWidth) {
-				std::cout << j;
-			}
+
 			cop->setPixel(j, i, SUM);
 
 		}
