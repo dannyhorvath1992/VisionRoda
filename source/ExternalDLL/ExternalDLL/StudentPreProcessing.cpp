@@ -75,7 +75,7 @@ IntensityImage * StudentPreProcessing::stepScaleImage(const IntensityImage &imag
 		int offset = 0;
 
 		for (int i = 0; i < newHeight; ++i) {
-			for (int j = 0; j < newWidth; ++j) {
+			for (int j = 0; j < newWidth-1; ++j) {
 				x = (int)(x_ratio * j);
 				y = (int)(y_ratio * i);
 				x_diff = (x_ratio * j) - x;
@@ -94,7 +94,7 @@ IntensityImage * StudentPreProcessing::stepScaleImage(const IntensityImage &imag
 					C*(y_diff)*(1 - x_diff) + D*(x_diff*y_diff)
 					);
 
-				cop->setPixel(offset++, gray);
+				cop->setPixel(j,i, gray);
 			}
 		}
 		
