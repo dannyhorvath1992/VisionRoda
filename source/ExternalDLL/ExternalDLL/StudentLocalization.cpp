@@ -1,6 +1,7 @@
 #include "StudentLocalization.h"
 #include "ImageIO.h"
 #include "ImageFactory.h"
+#include "basetimer.h"
 
 bool StudentLocalization::stepFindHead(const IntensityImage &image, FeatureMap &features) const {
 	return false;
@@ -19,140 +20,157 @@ bool StudentLocalization::stepFindNoseEndsAndEyes(const IntensityImage &image, F
 }
 
 bool StudentLocalization::stepFindExactEyes(const IntensityImage &image, FeatureMap &features) const {
-	RGBImage * debugImage = ImageFactory::newRGBImage();
-	ImageIO::intensityToRGB(image, *debugImage);
 
-	//Create the eye features to return
-	Feature featureLeftEye = Feature(Feature::FEATURE_EYE_LEFT_RECT);
-	Feature featureRightEye = Feature(Feature::FEATURE_EYE_RIGHT_RECT);
+	// maak een timer object aan
+	BaseTimer bt;
 
-	Feature top_head = features.getFeature(Feature::FEATURE_HEAD_TOP);
-	Feature bottom_nose_left = features.getFeature(Feature::FEATURE_NOSE_END_LEFT);
-	Feature bottom_nose_right = features.getFeature(Feature::FEATURE_NOSE_END_RIGHT);
-	Feature bottom_head_left = features.getFeature(Feature::FEATURE_HEAD_LEFT_NOSE_BOTTOM);
-	Feature bottom_head_right = features.getFeature(Feature::FEATURE_HEAD_RIGHT_NOSE_BOTTOM);
+	// start de timer
+	bt.start();
 
-	//Add the left eye rect
-	int x_top_left_left_eye = bottom_head_left.getPoints()[0].getX();
-	int y_top_left_left_eye = top_head.getPoints()[0].getY();
-	int x_bottom_right_left_eye = bottom_nose_left.getPoints()[0].getX();
-	int y_bottom_right_left_eye = bottom_nose_left.getPoints()[0].getY();
+	// Eyes
+	Feature leftEyeFeat = Feature(Feature::FEATURE_EYE_LEFT_RECT);
+	Feature rightEyeFeat = Feature(Feature::FEATURE_EYE_RIGHT_RECT);
 
-	double IntensityEyeLocalizationStart = 0.3;
-	double IntensityEyeLocalizationEnd = 0.07;
+	//Head
+	Feature headTop = features.getFeature(Feature::FEATURE_HEAD_TOP);
+	Feature leftHeadBottom = features.getFeature(Feature::FEATURE_HEAD_LEFT_NOSE_BOTTOM);
+	Feature rightHeadBottom = features.getFeature(Feature::FEATURE_HEAD_RIGHT_NOSE_BOTTOM);
 
-	bool found = false;
-	for (int i = y_bottom_right_left_eye; i > y_top_left_left_eye; i--){
-		int intensity = 0;
-		for (int j = x_top_left_left_eye; j < x_bottom_right_left_eye; j++){
-			if (debugImage->getPixel(j, i).b == 0){
-				intensity++;
+	// Nose
+	Feature leftNoseBottom = features.getFeature(Feature::FEATURE_NOSE_END_LEFT);
+	Feature rightNoseBottom = features.getFeature(Feature::FEATURE_NOSE_END_RIGHT);
+
+
+	int leftEyeBottomRightX = leftNoseBottom.getPoints()[0].getX();
+	int leftEyeBottomRightY = leftNoseBottom.getPoints()[0].getY();
+
+	int leftEyeTopLeftX = leftHeadBottom.getPoints()[0].getX();
+	int leftEyeTopLeftY = headTop.getPoints()[0].getY();
+
+	double eyeLocaBegin = 0.3;
+	double eyeLocaFinish = 0.07;
+
+	RGBImage *tempImg = ImageFactory::newRGBImage();
+	ImageIO::intensityToRGB(image, *tempImg);
+
+	bool isFound = false;
+	for (int i = leftEyeBottomRightY; i > leftEyeTopLeftY; i--){
+		int intens = 0;
+		for (int j = leftEyeTopLeftX; j < leftEyeBottomRightX; j++){
+			if (tempImg->getPixel(j, i).b == 0){
+				intens++;
 			}
 		}
-		double result = (double)intensity / (double)(x_bottom_right_left_eye - x_top_left_left_eye);
-		if (!found){
-			if (result >= IntensityEyeLocalizationStart){
-				y_bottom_right_left_eye = i;
-				found = true;
+		double theRes = (double)intens / (double)(leftEyeBottomRightX - leftEyeTopLeftX);
+		if (!isFound){
+			if (theRes >= eyeLocaBegin){
+				leftEyeBottomRightY = i;
+				isFound = true;
 			}
 		}
 		else {
-			if (result <= IntensityEyeLocalizationEnd){
-				y_top_left_left_eye = i;
+			if (theRes <= eyeLocaFinish){
+				leftEyeTopLeftY = i;
 				break;
 			}
 		}
 	}
 
-	for (int i = x_top_left_left_eye; i < x_bottom_right_left_eye; i++){
-		int intensity = 0;
-		for (int j = y_top_left_left_eye; j < y_bottom_right_left_eye; j++){
-			if (debugImage->getPixel(i, j).b == 0){
-				intensity++;
+	for (int i = leftEyeTopLeftX; i < leftEyeBottomRightX; i++){
+		int intens = 0;
+		for (int j = leftEyeTopLeftY; j < leftEyeBottomRightY; j++){
+			if (tempImg->getPixel(i, j).b == 0){
+				intens++;
 			}
 		}
-		double result = (double)intensity / (double)(y_bottom_right_left_eye - y_top_left_left_eye);
-		if (result > 0){
-			x_top_left_left_eye = i;
+		double theRes = (double)intens / (double)(leftEyeBottomRightY - leftEyeTopLeftY);
+		if (theRes > 0){
+			leftEyeTopLeftX = i;
 			break;
 		}
 	}
 
-	featureLeftEye.addPoint(Point2D<double>(x_top_left_left_eye, y_top_left_left_eye));
-	featureLeftEye.addPoint(Point2D<double>(x_bottom_right_left_eye, y_bottom_right_left_eye));
 
-	//Add the right eye rect
-	int x_top_left_right_eye = bottom_nose_right.getPoints()[0].getX();
-	int y_top_left_right_eye = top_head.getPoints()[0].getY();
-	int x_bottom_right_right_eye = bottom_head_right.getPoints()[0].getX();
-	int y_bottom_right_right_eye = bottom_nose_left.getPoints()[0].getY();
+	int rightEyeBottomRightX = rightHeadBottom.getPoints()[0].getX();
+	int rightEyeBottomRightY = leftNoseBottom.getPoints()[0].getY();
 
+	int rightEyeTopLeftX = rightNoseBottom.getPoints()[0].getX();
+	int rightEyeTopLeftY = headTop.getPoints()[0].getY();
 
-	found = false;
-	for (int i = y_bottom_right_right_eye; i > y_top_left_right_eye; i--){
-		int intensity = 0;
-		for (int j = x_top_left_right_eye; j < x_bottom_right_right_eye; j++){
-			if (debugImage->getPixel(j, i).b == 0){
-				intensity++;
+	leftEyeFeat.addPoint(Point2D<double>(leftEyeTopLeftX, leftEyeTopLeftY));
+	leftEyeFeat.addPoint(Point2D<double>(leftEyeBottomRightX, leftEyeBottomRightY));
+
+	isFound = false;
+	for (int i = rightEyeBottomRightY; i > rightEyeTopLeftY; i--){
+		int intens = 0;
+		for (int j = rightEyeTopLeftX; j < rightEyeBottomRightX; j++){
+			if (tempImg->getPixel(j, i).b == 0){
+				intens++;
 			}
 		}
-		double result = (double)intensity / (double)(x_bottom_right_right_eye - x_top_left_right_eye);
-		if (!found){
-			if (result >= IntensityEyeLocalizationStart){
-				y_bottom_right_right_eye = i;
-				found = true;
+		double theRes = (double)intens / (double)(rightEyeBottomRightX - rightEyeTopLeftX);
+		if (!isFound){
+			if (theRes >= eyeLocaBegin){
+				rightEyeBottomRightY = i;
+				isFound = true;
 			}
 		}
 		else {
-			if (result <= IntensityEyeLocalizationEnd){
-				y_top_left_right_eye = i;
+			if (theRes <= eyeLocaFinish){
+				rightEyeTopLeftY = i;
 				break;
 			}
 		}
 	}
 
-	for (int i = x_bottom_right_right_eye; i > x_top_left_right_eye; i--){
-		int intensity = 0;
-		for (int j = y_top_left_right_eye; j < y_bottom_right_right_eye; j++){
-			if (debugImage->getPixel(i, j).b == 0){
-				intensity++;
+	for (int i = rightEyeBottomRightX; i > rightEyeTopLeftX; i--){
+		int intens = 0;
+		for (int j = rightEyeTopLeftY; j < rightEyeBottomRightY; j++){
+			if (tempImg->getPixel(i, j).b == 0){
+				intens++;
 			}
 		}
-		double result = (double)intensity / (double)(y_bottom_right_right_eye - y_top_left_right_eye);
-		if (result > 0){
-			x_bottom_right_right_eye = i;
+		double theRes = (double)intens / (double)(rightEyeBottomRightY - rightEyeTopLeftY);
+		if (theRes > 0){
+			rightEyeBottomRightX = i;
 			break;
 		}
 	}
 
-	featureRightEye.addPoint(Point2D<double>(x_top_left_right_eye, y_top_left_right_eye));
-	featureRightEye.addPoint(Point2D<double>(x_bottom_right_right_eye, y_bottom_right_right_eye));
+	rightEyeFeat.addPoint(Point2D<double>(rightEyeTopLeftX, rightEyeTopLeftY));
+	rightEyeFeat.addPoint(Point2D<double>(rightEyeBottomRightX, rightEyeBottomRightY));
 
-	//Draw rectangles on RGB_Map
-	for (int i = x_top_left_left_eye - 1; i <= x_bottom_right_left_eye + 1; i++){
-		debugImage->setPixel(i, y_top_left_left_eye - 1, RGB(255, 255, 0));
-		debugImage->setPixel(i, y_bottom_right_left_eye + 1, RGB(255, 255, 0));
+	for (int i = leftEyeTopLeftX - 1; i <= leftEyeBottomRightX + 1; i++){
+		tempImg->setPixel(i, leftEyeTopLeftY - 1, RGB(255, 255, 0));
+		tempImg->setPixel(i, leftEyeBottomRightY + 1, RGB(255, 255, 0));
 	}
-	for (int i = y_top_left_left_eye - 1; i <= y_bottom_right_left_eye + 1; i++){
-		debugImage->setPixel(x_top_left_left_eye - 1, i, RGB(255, 255, 0));
-		debugImage->setPixel(x_bottom_right_left_eye + 1, i, RGB(255, 255, 0));
-	}
-
-	for (int i = x_top_left_right_eye - 1; i <= x_bottom_right_right_eye + 1; i++){
-		debugImage->setPixel(i, y_top_left_right_eye - 1, RGB(255, 255, 0));
-		debugImage->setPixel(i, y_bottom_right_right_eye + 1, RGB(255, 255, 0));
-	}
-	for (int i = y_top_left_right_eye - 1; i <= y_bottom_right_right_eye + 1; i++){
-		debugImage->setPixel(x_top_left_right_eye - 1, i, RGB(255, 255, 0));
-		debugImage->setPixel(x_bottom_right_right_eye + 1, i, RGB(255, 255, 0));
+	for (int i = leftEyeTopLeftY - 1; i <= leftEyeBottomRightY + 1; i++){
+		tempImg->setPixel(leftEyeTopLeftX - 1, i, RGB(255, 255, 0));
+		tempImg->setPixel(leftEyeBottomRightX + 1, i, RGB(255, 255, 0));
 	}
 
-	//Put the eye features
-	features.putFeature(featureRightEye);
-	features.putFeature(featureLeftEye);
+	for (int i = rightEyeTopLeftX - 1; i <= rightEyeBottomRightX + 1; i++){
+		tempImg->setPixel(i, rightEyeTopLeftY - 1, RGB(255, 255, 0));
+		tempImg->setPixel(i, rightEyeBottomRightY + 1, RGB(255, 255, 0));
+	}
+	for (int i = rightEyeTopLeftY - 1; i <= rightEyeBottomRightY + 1; i++){
+		tempImg->setPixel(rightEyeTopLeftX - 1, i, RGB(255, 255, 0));
+		tempImg->setPixel(rightEyeBottomRightX + 1, i, RGB(255, 255, 0));
+	}
 
-	//Save debug image
-	ImageIO::saveRGBImage(*debugImage, ImageIO::getDebugFileName("Localization-5/debug.png"));
-	delete debugImage;
+	features.putFeature(leftEyeFeat);
+	features.putFeature(rightEyeFeat);
+
+	// save img
+	ImageIO::saveRGBImage(*tempImg, ImageIO::getDebugFileName("Localization-5/debug.png"));
+	// Delete temp img
+	delete tempImg;
+
+	// stop de timer
+	bt.stop();
+
+	// rapporteer door de elapsed...() functies aan te roepen
+	std::cout << "Eyesfind Time for the operation was: " << bt.elapsedMicroSeconds() << " microseconds" << std::endl;
+
 	return true;
 }
